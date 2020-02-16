@@ -21,17 +21,17 @@ namespace ElasticSearchDotNet
     {
         public Startup(IConfiguration configuration)
         {
-            // Log.Logger = new LoggerConfiguration()
-            //    .Enrich.FromLogContext()
-            //    .MinimumLevel.Verbose()
-            //    .WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri("http://localhost:9200"))
-            //    {
-            //        MinimumLogEventLevel = LogEventLevel.Verbose,
-            //        AutoRegisterTemplate = true
-            //    })
-            //    .CreateLogger();
-
             Configuration = configuration;
+
+            Log.Logger = new LoggerConfiguration()
+               .Enrich.FromLogContext()
+               .MinimumLevel.Verbose()
+               .WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri(Configuration.GetValue<string>("App:ElasticSearch")))
+               {
+                   MinimumLogEventLevel = LogEventLevel.Verbose,
+                   AutoRegisterTemplate = true
+               })
+               .CreateLogger();
         }
 
         public IConfiguration Configuration { get; }
@@ -41,9 +41,7 @@ namespace ElasticSearchDotNet
         {
             services.AddSingleton<ElasticClient>(provider =>
             {
-                var elasticUrl = Configuration.GetValue<string>("App:ElasticSearch");
-
-                var node = new Uri(elasticUrl);
+                var node = new Uri(Configuration.GetValue<string>("App:ElasticSearch"));
                 var settings = new ConnectionSettings(node);
 
                 return new ElasticClient(settings);
@@ -62,7 +60,7 @@ namespace ElasticSearchDotNet
                 app.UseDeveloperExceptionPage();
             }
 
-            //loggerFactory.AddSerilog();
+            loggerFactory.AddSerilog();
 
             app.UseRouting();
 

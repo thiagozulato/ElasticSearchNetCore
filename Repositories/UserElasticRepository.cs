@@ -20,12 +20,9 @@ namespace ElasticSearchDotNet
             await _elastic.IndexAsync(model, idx => idx.Index(Index).Id(model.Id));
         }
 
-        public async Task<User> Delete(string id)
+        public async Task Delete(string id)
         {
-            var user = await GetById(id);
-            var response = await _elastic.DeleteAsync<User>(user, q => q.Index(Index));
-
-            return await Task.FromResult(user);
+            var response = await _elastic.DeleteAsync(new DocumentPath<User>(id), q => q.Index(Index));
         }
 
         public async Task<IEnumerable<User>> GetAll()
@@ -37,20 +34,16 @@ namespace ElasticSearchDotNet
 
         public async Task<User> GetById(string id)
         {
-            var response = await _elastic.SearchAsync<User>(s =>
-                                              s.Index(Index)
-                                               .Query(q =>
-                                                      q.Match(
-                                                          m => m.Field(f => f.Id)
-                                                                .Query(id))));
+            var response = await _elastic.SearchAsync<User>(s => s.Index(Index)
+                                                                  .Query(q => q.Match(m => m.Field(f => f.Id)
+                                                                                            .Query(id))));
 
             return response.Documents.FirstOrDefault();
         }
 
         public async Task Update(string id, User model)
         {
-            var oldUser = await GetById(id);
-            await _elastic.UpdateAsync<User>(oldUser, u => u.Index(Index).Doc(model));
+            await _elastic.UpdateAsync(new DocumentPath<User>(id), u => u.Index(Index).Doc(model));
         }
     }
 }

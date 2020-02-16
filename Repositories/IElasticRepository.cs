@@ -10,6 +10,6 @@ namespace ElasticSearchDotNet
         Task<T> GetById(string id);
         Task Add(T model);
         Task Update(string id, T model);
-        Task<User> Delete(string id);
+        Task Delete(string id);
     }
 }

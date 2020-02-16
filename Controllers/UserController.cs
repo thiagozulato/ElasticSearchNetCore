@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Nest;
 
 namespace ElasticSearchDotNet
@@ -14,20 +15,28 @@ namespace ElasticSearchDotNet
     public class UserController : ControllerBase
     {
         public readonly IElasticRepository<User> _userElasticRepository;
-        public UserController(IElasticRepository<User> userElasticRepository)
+        public readonly ILogger<UserController> _logger;
+
+        public UserController(IElasticRepository<User> userElasticRepository,
+                              ILogger<UserController> logger)
         {
             _userElasticRepository = userElasticRepository;
+            _logger = logger;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
+            _logger.LogInformation("Getting all users");
+
             return Ok(Api.Created(await _userElasticRepository.GetAll()));
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUserById(Guid id)
         {
+            _logger.LogInformation($"Getting the User by Id {id}");
+
             return Ok(await _userElasticRepository.GetById(id.ToString()));
         }
 
@@ -43,6 +52,8 @@ namespace ElasticSearchDotNet
 
             await _userElasticRepository.Add(user);
 
+            _logger.LogInformation("New user was added successfully.");
+
             return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, user);
         }
 
@@ -51,69 +62,19 @@ namespace ElasticSearchDotNet
         {
             await _userElasticRepository.Update(id.ToString(), user);
 
+            _logger.LogInformation("User has been updated successfully.");
+
             return Ok(Api.Created(user));
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(Guid id)
         {
-            var deletedUser = await _userElasticRepository.Delete(id.ToString());
+            await _userElasticRepository.Delete(id.ToString());
 
-            return Ok(Api.Created(deletedUser));
-        }
-    }
+            _logger.LogInformation("User has been successfully deleted.");
 
-    public class User
-    {
-        [Required(ErrorMessage = "Invalid UserID")]
-        public Guid Id { get; set; }
-
-        [Required(ErrorMessage = "User name is required")]
-        public string Name { get; set; }
-
-        [Required(ErrorMessage = "User birthdate is required")]
-        public DateTime BirthDate { get; set; }
-
-        [Required(ErrorMessage = "User document is required")]
-        public string Document { get; set; }
-
-        [Required(ErrorMessage = "User country is required")]
-        public string Country { get; set; }
-
-        public void CreateId()
-        {
-            Id = Guid.NewGuid();
-        }
-    }
-
-    public class Api
-    {
-        public static ApiResponse<T> Created<T>(T value)
-        {
-            return new ApiResponse<T>(value);
-        }
-
-        public static ApiResponse<Object> CreateInvalidResource(int code, string message)
-        {
-            return new ApiResponse<Object>(code, message);
-        }
-    }
-
-    public class ApiResponse<T>
-    {
-        public T Data { get; private set; }
-        public int Code { get; private set; } = 0;
-        public string Message { get; private set; } = string.Empty;
-
-        public ApiResponse(T data)
-        {
-            Data = data;
-        }
-
-        public ApiResponse(int code, string message)
-        {
-            Code = code;
-            Message = message;
+            return NoContent();
         }
     }
 }
