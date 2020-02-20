@@ -1,10 +1,10 @@
-# ElasticSearch .Net Core
+# ASP.NET Core with Elasticsearch + Kibana
 
-A sample of how to integrate .Net Core with ElasticSearch.
+A sample of how to integrate ASP.NET Core with Elasticsearch.
 
 ## Elasticsearch and Kibana
 
-Go to **ElasticDocker** folder and type the command below
+Go to the **ElasticDocker** folder and type the command below
 
 docker-compose up -d
 
